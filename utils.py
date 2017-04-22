@@ -104,54 +104,6 @@ class Data(object):
 
         return np.array(imgs)
 
-    def load_train2(self, use_cache=False):
-        X, y = [], []
-        print('Reading train images')
-        cache_file = os.path.join(self.root_path, 'cache', 'train.p')
-        if use_cache and os.path.isfile(cache_file):
-            print('Reading from cache')
-            with open(cache_file, 'rb') as f:
-                X, y = pickle.load(f)
-
-        else:
-            for i in range(10):
-                print('Loading folder c{}'.format(i))
-                dir_path = os.path.join(
-                    self.root_path, 'train', 'c{}'.format(i))
-                files = os.listdir(dir_path)
-                for f in files:
-                    X.append(process_img(dir_path + '/' + f))
-                    y.append(i)
-
-        X, y = np.array(X), to_categorical(y, num_classes=10)
-        idx = np.random.permutation(X.shape[0])
-        X, y = X[idx], y[idx]
-        self.train_X, self.train_y = X, y
-        return X, y
-
-    def load_test2(self):
-        X = []
-        print('Reading test images')
-        dir_path = os.path.join(self.root_path, 'test')
-        files = os.listdir(dir_path)
-        for f in files:
-            X.append(process_img(dir_path + '/' + f))
-
-        X = np.array(X)
-        self.test_X = X
-        return X
-
-    def cache_data(self, mode='train'):
-        if mode == 'train':
-            cache_file = os.path.join(self.root_path, 'cache', 'train.p')
-            with open(cache_file, 'wb') as f:
-                pickle.dump((self.train_X, self.train_y), f)
-
-        elif mode == 'test':
-            cache_file = os.path.join(self.root_path, 'cache', 'test.p')
-            with open(cache_file, 'wb') as f:
-                pickle.dump(self.test_X, f)
-
 
 def get_time(func):
     def wrapper(*args, **kwargs):
