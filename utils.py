@@ -60,14 +60,16 @@ class Data(object):
         start, epoch = 0, 0
         while True:
             end = start + self.load_size
-            if end > files.shape[0]:
+            if end >= files.shape[0]:
                 epoch += 1
                 X = self.file2img(files[start:], labels[start:])
-                y = to_categorical(labels[start:], num_classes=10)
+                y = labels[start:]
+                #y = to_categorical(labels[start:], num_classes=10)
                 start = 0
             else:
                 X = self.file2img(files[start:end], labels[start:end])
-                y = to_categorical(labels[start:end], num_classes=10)
+                y = labels[start:end]
+                #y = to_categorical(labels[start:end], num_classes=10)
                 start += self.load_size
             yield X, y
             if epoch >= nb_epoch:
@@ -80,7 +82,7 @@ class Data(object):
         start, epoch = 0, 0
         while True:
             end = start + self.load_size
-            if end > files.shape[0]:
+            if end >= files.shape[0]:
                 epoch += 1
                 X = self.file2img(files[start:])
                 start = 0
