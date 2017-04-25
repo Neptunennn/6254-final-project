@@ -4,6 +4,7 @@ import time
 import os
 from keras.utils import to_categorical
 import cPickle as pickle
+import sys
 
 
 def process_img(path, size=(224, 224)):
@@ -43,7 +44,7 @@ class Data(object):
         self.root_path = root_path
         self.load_size = load_size
 
-    def load_train(self, nb_epoch=1):
+    def load_train(self, nb_epoch=1, y_oneHot=True):
         train_dir = os.path.join(self.root_path, 'train')
         files = []
         labels = []
@@ -58,18 +59,28 @@ class Data(object):
         idx = np.random.permutation(files.shape[0])
         files, labels = files[idx], labels[idx]
         start, epoch = 0, 0
+        step = 0
         while True:
             end = start + self.load_size
-            if end > files.shape[0]:
+            step += 1
+            if end >= files.shape[0]:
                 epoch += 1
                 X = self.file2img(files[start:], labels[start:])
-                y = to_categorical(labels[start:], num_classes=10)
+                if y_oneHot:
+                    y = to_categorical(labels[start:], num_classes=10)
+                else:
+                    y = labels[start:]
                 start = 0
             else:
                 X = self.file2img(files[start:end], labels[start:end])
-                y = to_categorical(labels[start:end], num_classes=10)
+                if y_oneHot:
+                    y = to_categorical(labels[start:end], num_classes=10)
+                else:
+                    y = labels[start:end]
                 start += self.load_size
             yield X, y
+            if step > 3:
+                break
             if epoch >= nb_epoch:
                 break
 

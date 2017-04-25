@@ -16,60 +16,61 @@ class VGG16(object):
     def __init__(self, our_weights_path, vgg16_weights_path):
         self.weights_path = our_weights_path
         self.vgg16_weights_path = vgg16_weights_path
-        if not os.path.isfile(our_weights_path):
-            self.compile_vgg16()
-        else:
-            self.model = load_model(our_weights_path)
+        # if not os.path.isfile(our_weights_path):
+        #     self.compile_vgg16()
+        # else:
+        #     self.model = load_model(our_weights_path)
+        self.compile_vgg16()
 
     def fit(self, data, batch_size, nb_epoch):
         for X, y in data.load_train(nb_epoch=nb_epoch):
             self.model.fit(X, y, batch_size=batch_size, epochs=1,
-                           verbose=2)
+                           verbose=1)
         self.model.save(self.weights_path)
 
-    def compile_vgg16(self):
+    def compile_vgg16(self, trainable=False):
         model = Sequential()
         model.add(ZeroPadding2D((1, 1), input_shape=(224, 224, 3)))
-        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(Conv2D(64, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(64, (3, 3), activation='relu'))
+        model.add(Conv2D(64, (3, 3), activation='relu', trainable=trainable))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(Conv2D(128, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(128, (3, 3), activation='relu'))
+        model.add(Conv2D(128, (3, 3), activation='relu', trainable=trainable))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(256, (3, 3), activation='relu'))
+        model.add(Conv2D(256, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(256, (3, 3), activation='relu'))
+        model.add(Conv2D(256, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(256, (3, 3), activation='relu'))
+        model.add(Conv2D(256, (3, 3), activation='relu', trainable=trainable))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(512, (3, 3), activation='relu'))
+        model.add(Conv2D(512, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(512, (3, 3), activation='relu'))
+        model.add(Conv2D(512, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(512, (3, 3), activation='relu'))
+        model.add(Conv2D(512, (3, 3), activation='relu', trainable=trainable))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(512, (3, 3), activation='relu'))
+        model.add(Conv2D(512, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(512, (3, 3), activation='relu'))
+        model.add(Conv2D(512, (3, 3), activation='relu', trainable=trainable))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Conv2D(512, (3, 3), activation='relu'))
+        model.add(Conv2D(512, (3, 3), activation='relu', trainable=trainable))
         model.add(MaxPooling2D(pool_size=(2, 2)))
 
         model.add(Flatten())
-        model.add(Dense(4096, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(4096, activation='relu'))
-        model.add(Dropout(0.5))
+        model.add(Dense(4096, activation='relu', trainable=trainable))
+        model.add(Dropout(1))
+        model.add(Dense(4096, activation='relu', trainable=trainable))
+        # model.add(Dropout(1))
 
         f = h5py.File(self.vgg16_weights_path)
         for k in range(f.attrs['nb_layers']):
@@ -96,3 +97,6 @@ class VGG16(object):
         opt = RMSprop(decay=1e-6)
         model.compile(optimizer=opt, loss='categorical_crossentropy')
         self.model = model
+
+    
+    
