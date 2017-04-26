@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import cv2
 import time
@@ -8,34 +9,9 @@ import sys
 
 
 def process_img(path, size=(224, 224)):
-    img = cv2.imread(path).astype(np.float64)
+    img = cv2.imread(path)
     img = cv2.resize(img, size, interpolation=cv2.INTER_LINEAR)
-    img[:, :, 0] -= 103.939
-    img[:, :, 1] -= 116.779
-    img[:, :, 2] -= 123.68
     return img
-
-
-class Buffer(object):
-
-    def __init__(self, root_path, files, labels=None):
-        if labels:
-            self.mode = 'train'
-            self.files = files
-            self.labels = labels
-        else:
-            self.mode = 'test'
-            self.files = files
-
-        self.root_path = root_path
-
-    def __getitem__(self, key):
-        path = self.root_path
-        if isinstance(key, slice):
-            pass
-        else:
-            path += '/c{}'.format(key)
-            pass
 
 
 class Data(object):
@@ -59,10 +35,8 @@ class Data(object):
         idx = np.random.permutation(files.shape[0])
         files, labels = files[idx], labels[idx]
         start, epoch = 0, 0
-        step = 0
         while True:
             end = start + self.load_size
-            step += 1
             if end >= files.shape[0]:
                 epoch += 1
                 X = self.file2img(files[start:], labels[start:])
@@ -79,8 +53,6 @@ class Data(object):
                     y = labels[start:end]
                 start += self.load_size
             yield X, y
-            if step > 3:
-                break
             if epoch >= nb_epoch:
                 break
 
@@ -114,6 +86,53 @@ class Data(object):
                 imgs.append(process_img(path))
 
         return np.array(imgs)
+
+
+def serialize_data(root_path, mode='train'):
+    if mode == 'train':
+        file_dir = os.path.join(root_path, 'train')
+        files, labels = [], []
+        for i in range(10):
+            path = os.path.join(file_dir, 'c{}'.format(i))
+            tmp = os.listdir(path)
+            files.extend(tmp)
+            labels.extend([i] * len(tmp))
+
+        assert len(files) == len(labels)
+        files, labels = np.array(files), np.array(labels)
+        idx = np.random.permutation(files.shape[0])
+        files, labels = files[idx], labels[idx]
+    else:
+        file_dir = os.path.join(root_path, 'test')
+        path = os.path.join(root_path, 'test')
+        files = os.listdir(path)
+
+    X = []
+    y = labels
+    N = len(files)
+    if mode == 'train':
+        for i, f in enumerate(files):
+            file_path = root_path + '/train/c{}/{}'.format(labels[i], f)
+            X.append(process_img(file_path))
+            if i % 500 == 0:
+                print("Complete {:.1%}".format(i / N))
+        assert len(X) == len(y)
+        X, y = np.array(X), np.array(y)
+        print("Complete 100%, pickling...")
+        with open(mode + '.pkl', 'wb') as f:
+            pickle.dump((X, y), f, 2)
+        print("Pickling complete!")
+    else:
+        for f in files:
+            file_path = root_path + '/test/{}'.format(f)
+            X.append(process_img(file_path))
+            if i % 500 == 0:
+                print("Complete {:.1%}".format(i / N))
+        X = np.array(X)
+        print("Complete 100%, pickling...")
+        with open(mode + '.pkl', 'wb') as f:
+            pickle.dump(X, f, 2)
+        print("Pickling complete!")
 
 
 def get_time(func):
