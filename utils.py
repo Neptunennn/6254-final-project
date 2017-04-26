@@ -6,7 +6,7 @@ import os
 from keras.utils import to_categorical
 import cPickle as pickle
 import sys
-
+import hickle as hkl
 
 def process_img(path, size=(224, 224)):
     img = cv2.imread(path)
@@ -116,11 +116,9 @@ def serialize_data(root_path, mode='train'):
             X.append(process_img(file_path))
             if i % 500 == 0:
                 print("Complete {:.1%}".format(i / N))
-        assert len(X) == len(y)
         X, y = np.array(X), np.array(y)
         print("Complete 100%, pickling...")
-        with open(mode + '.pkl', 'wb') as f:
-            pickle.dump((X, y), f, 2)
+        hkl.dump((X, y), mode+'.hkl', mode='w')
         print("Pickling complete!")
     else:
         for f in files:
@@ -130,8 +128,7 @@ def serialize_data(root_path, mode='train'):
                 print("Complete {:.1%}".format(i / N))
         X = np.array(X)
         print("Complete 100%, pickling...")
-        with open(mode + '.pkl', 'wb') as f:
-            pickle.dump(X, f, 2)
+        hkl.dump(X, mode+'.hkl', mode='w')
         print("Pickling complete!")
 
 
